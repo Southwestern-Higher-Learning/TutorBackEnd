@@ -9,7 +9,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 log = logging.getLogger("uvicorn")
 
-config = re.match("postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL"))
+config = re.match("postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL", ''))
 DB_USER, DB_PASS, DB_HOST, DB = config.groups()
 
 context = ssl.create_default_context()
