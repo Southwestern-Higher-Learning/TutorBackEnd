@@ -49,6 +49,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
     steps:
       - name: Checkout master
         uses: actions/checkout@v2.3.4
@@ -73,8 +76,8 @@ jobs:
             --name tutor-backend \
             -e PORT=8765 \
             -e ENVIRONMENT=dev \
-            -e DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres \
-            -e DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/postgres \
+            -e DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres \
+            -e DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/postgres \
             -p 5003:8765 \
             ${{ env.IMAGE }}:latest
       - name: Run migrations
