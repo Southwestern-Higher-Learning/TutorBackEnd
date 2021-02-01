@@ -9,37 +9,38 @@ from tortoise.contrib.fastapi import register_tortoise
 
 log = logging.getLogger("uvicorn")
 
-config = re.match("postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL", ''))
-try:
+if "DATABASE_URL" in os.environ:
+
+    config = re.match(
+        "postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL")
+    )
     DB_USER, DB_PASS, DB_HOST, DB = config.groups()
-except AttributeError:
-    DB_USER, DB_PASS, DB_HOST, DB = '', '', '', ''
 
-context = ssl.create_default_context()
-context.check_hostname = False
-context.verify_mode = ssl.CERT_NONE
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
 
-TORTOISE_ORM = {
-    "connections": {
-        "default": {
-            "engine": "tortoise.backends.asyncpg",
-            "credentials": {
-                "database": DB,
-                "host": DB_HOST.split(":")[0],
-                "password": DB_PASS,
-                "port": int(DB_HOST.split(":")[1]),
-                "user": DB_USER,
-                "ssl": context,  # Here we pass in the SSL context
+    TORTOISE_ORM = {
+        "connections": {
+            "default": {
+                "engine": "tortoise.backends.asyncpg",
+                "credentials": {
+                    "database": DB,
+                    "host": DB_HOST.split(":")[0],
+                    "password": DB_PASS,
+                    "port": int(DB_HOST.split(":")[1]),
+                    "user": DB_USER,
+                    "ssl": context,  # Here we pass in the SSL context
+                },
             },
         },
-    },
-    "apps": {
-        "models": {
-            "models": ["app.models.tortoise", "aerich.models"],
-            "default_connection": "default",
+        "apps": {
+            "models": {
+                "models": ["app.models.tortoise", "aerich.models"],
+                "default_connection": "default",
+            },
         },
-    },
-}
+    }
 
 
 def init_db(app: FastAPI) -> None:
