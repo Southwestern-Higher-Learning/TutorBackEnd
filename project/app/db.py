@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+import ssl
 
 from fastapi import FastAPI
 from tortoise import Tortoise, run_async
@@ -7,9 +9,27 @@ from tortoise.contrib.fastapi import register_tortoise
 
 log = logging.getLogger("uvicorn")
 
+config = re.match("postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL"))
+DB_USER, DB_PASS, DB_HOST, DB = config.groups()
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
 
 TORTOISE_ORM = {
-    "connections": {"default": os.environ.get("DATABASE_URL")},
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            "credentials": {
+                "database": DB,
+                "host": DB_HOST.split(":")[0],
+                "password": DB_PASS,
+                "port": int(DB_HOST.split(":")[1]),
+                "user": DB_USER,
+                "ssl": context,  # Here we pass in the SSL context
+            },
+        },
+    },
     "apps": {
         "models": {
             "models": ["app.models.tortoise", "aerich.models"],
@@ -22,8 +42,7 @@ TORTOISE_ORM = {
 def init_db(app: FastAPI) -> None:
     register_tortoise(
         app,
-        db_url=os.environ.get("DATABASE_URL"),
-        modules={"models": ["app.models.tortoise", "aerich.models"]},
+        config=TORTOISE_ORM,
         add_exception_handlers=True,
         generate_schemas=os.environ.get("GENERATE_SCHEMAS", default=False),
     )
