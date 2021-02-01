@@ -56,19 +56,19 @@ jobs:
         run: |
           docker run \
             -d \
-            --name fastapi-tdd \
+            --name tutorapp-backend \
             -e PORT=8765 \
             -e ENVIRONMENT=dev \
             -e DATABASE_TEST_URL=sqlite://sqlite.db \
             -p 5003:8765 \
             ${{ env.IMAGE }}:latest
       - name: Migrations
-        run: docker exec python app/db.py
+        run: docker exec tutorapp-backend python app/db.py
       - name: Pytest
-        run: docker exec fastapi-tdd python -m pytest .
+        run: docker exec tutorapp-backend python -m pytest .
       - name: Flake8
-        run: docker exec fastapi-tdd python -m flake8 .
+        run: docker exec tutorapp-backend python -m flake8 .
       - name: Black
-        run: docker exec fastapi-tdd python -m black . --check
+        run: docker exec tutorapp-backend python -m black . --check
       - name: isort
-        run: docker exec fastapi-tdd python -m isort . --check-only
+        run: docker exec tutorapp-backend python -m isort . --check-only
