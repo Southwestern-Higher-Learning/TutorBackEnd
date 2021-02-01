@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI
+from tortoise import Tortoise, run_async # updated
 from tortoise.contrib.fastapi import register_tortoise
 
 TORTOISE_ORM = {
