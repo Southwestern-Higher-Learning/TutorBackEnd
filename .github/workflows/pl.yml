@@ -1,0 +1,48 @@
+name: Continuous Integration and Delivery
+
+on: [pull_request]
+
+env:
+  IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/tutor-backend
+  PORT: 8765
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+  DATABASE_TEST_URL: postgres://postgres:postgres@postgres:5432/postgres
+  GENERATE_SCHEMAS: 1
+
+defaults:
+  run:
+    working-directory: project
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    container: python:3.8.6-slim-buster
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2.3.4
+      - name: Install packages
+        run: pip install -r requirements.txt
+      - name: Pytest
+        run: python -m pytest .
+      - name: Flake8
+        run: python -m flake8 .
+      - name: Black
+        run: python -m black . --check
+      - name: isort
+        run: python -m isort . --check-only

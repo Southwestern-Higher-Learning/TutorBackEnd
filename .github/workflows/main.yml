@@ -4,45 +4,71 @@ on: [push]
 
 env:
   IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/tutor-backend
-  PORT: 8765
-  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
-  DATABASE_TEST_URL: postgres://postgres:postgres@postgres:5432/postgres
-  GENERATE_SCHEMAS: 1
-
-defaults:
-  run:
-    working-directory: project
 
 jobs:
-  test:
-    name: Test Backend
-    runs-on: ubuntu-latest
-    container: python:3.8.6-slim-buster
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub image
-        image: postgres
-        # Provide the password for postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout master
         uses: actions/checkout@v2.3.4
-      - name: Install packages
-        run: pip install -r requirements.txt
+      - name: Log in to GitHub Packages
+        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull image
+        run: |
+          docker pull ${{ env.IMAGE }}:latest || true
+      - name: Build image
+        run: |
+          docker build \
+            --cache-from ${{ env.IMAGE }}:latest \
+            --tag ${{ env.IMAGE }}:latest \
+            --file ./project/Dockerfile.prod \
+            "./project"
+      - name: Push image
+        run: |
+          docker push ${{ env.IMAGE }}:latest
+
+  test:
+    name: Test Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2.3.4
+      - name: Log in to GitHub Packages
+        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull image
+        run: |
+          docker pull ${{ env.IMAGE }}:latest || true
+      - name: Build image
+        run: |
+          docker build \
+            --cache-from ${{ env.IMAGE }}:latest \
+            --tag ${{ env.IMAGE }}:latest \
+            --file ./project/Dockerfile.prod \
+            "./project"
+      - name: Run container
+        run: |
+          docker run \
+            -d \
+            --name fastapi-tdd \
+            -e PORT=8765 \
+            -e ENVIRONMENT=dev \
+            -e DATABASE_TEST_URL=sqlite://sqlite.db \
+            -p 5003:8765 \
+            ${{ env.IMAGE }}:latest
+      - name: Migrations
+        run: docker exec python app/db.py
       - name: Pytest
-        run: python -m pytest .
+        run: docker exec fastapi-tdd python -m pytest .
       - name: Flake8
-        run: python -m flake8 .
+        run: docker exec fastapi-tdd python -m flake8 .
       - name: Black
-        run: python -m black . --check
+        run: docker exec fastapi-tdd python -m black . --check
       - name: isort
-        run: python -m isort . --check-only
+        run: docker exec fastapi-tdd python -m isort . --check-only
