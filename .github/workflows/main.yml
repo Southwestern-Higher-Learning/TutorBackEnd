@@ -4,37 +4,19 @@ on: [push]
 
 env:
   IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/tutor-backend
+  PORT: 8765
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+  DATABASE_TEST_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+defaults:
+  run:
+    working-directory: project
 
 jobs:
-
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master
-        uses: actions/checkout@v2.3.4
-      - name: Log in to GitHub Packages
-        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull image
-        run: |
-          docker pull ${{ env.IMAGE }}:latest || true
-      - name: Build image
-        run: |
-          docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
-            --tag ${{ env.IMAGE }}:latest \
-            --file ./project/Dockerfile.prod \
-            "./project"
-      - name: Push image
-        run: |
-          docker push ${{ env.IMAGE }}:latest
-
   test:
-    name: Test Docker Image
+    name: Test Backend
     runs-on: ubuntu-latest
-    needs: build
+    container: python:3.8.6-slim-buster
     services:
       # Label used to access the service container
       postgres:
@@ -49,44 +31,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+
     steps:
       - name: Checkout master
         uses: actions/checkout@v2.3.4
-      - name: Log in to GitHub Packages
-        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull image
-        run: |
-          docker pull ${{ env.IMAGE }}:latest || true
-      - name: Build image
-        run: |
-          docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
-            --tag ${{ env.IMAGE }}:latest \
-            --file ./project/Dockerfile.prod \
-            "./project"
-      - name: Run container
-        run: |
-          docker run \
-            -d \
-            --name tutor-backend \
-            -e PORT=8765 \
-            -e ENVIRONMENT=dev \
-            -e DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres \
-            -e DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/postgres \
-            -p 5003:8765 \
-            ${{ env.IMAGE }}:latest
+      - name: Install packages
+        run: pip install -r requirements.txt
       - name: Run migrations
-        run: docker exec tutor-backend aerich migrate
+        run:  aerich migrate
       - name: Pytest
-        run: docker exec fastapi-tdd python -m pytest .
+        run: python -m pytest .
       - name: Flake8
-        run: docker exec fastapi-tdd python -m flake8 .
+        run: python -m flake8 .
       - name: Black
-        run: docker exec fastapi-tdd python -m black . --check
+        run: python -m black . --check
       - name: isort
-        run: docker exec fastapi-tdd python -m isort . --check-only
+        run: python -m isort . --check-only
