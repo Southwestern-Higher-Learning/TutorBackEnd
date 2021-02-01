@@ -10,7 +10,10 @@ from tortoise.contrib.fastapi import register_tortoise
 log = logging.getLogger("uvicorn")
 
 config = re.match("postgres://(.*?):(.*?)@(.*?)/(.*)", os.environ.get("DATABASE_URL", ''))
-DB_USER, DB_PASS, DB_HOST, DB = config.groups()
+try:
+    DB_USER, DB_PASS, DB_HOST, DB = config.groups()
+except AttributeError:
+    DB_USER, DB_PASS, DB_HOST, DB = '', '', '', ''
 
 context = ssl.create_default_context()
 context.check_hostname = False
