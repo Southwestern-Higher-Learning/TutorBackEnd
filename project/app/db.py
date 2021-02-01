@@ -20,4 +20,5 @@ def init_db(app: FastAPI) -> None:
         db_url=os.environ.get("DATABASE_URL"),
         modules={"models": ["app.models.tortoise", "aerich.models"]},
         add_exception_handlers=True,
+        generate_schemas=os.environ.get("GENERATE_SCHEMAS", default=False),
     )
