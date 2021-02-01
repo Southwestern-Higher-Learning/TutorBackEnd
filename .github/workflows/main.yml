@@ -35,6 +35,20 @@ jobs:
     name: Test Docker Image
     runs-on: ubuntu-latest
     needs: build
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout master
         uses: actions/checkout@v2.3.4
@@ -59,7 +73,7 @@ jobs:
             --name tutor-backend \
             -e PORT=8765 \
             -e ENVIRONMENT=dev \
-            -e DATABASE_TEST_URL=sqlite://sqlite.db \
+            -e DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/postgres \
             -p 5003:8765 \
             ${{ env.IMAGE }}:latest
       - name: Run migrations
