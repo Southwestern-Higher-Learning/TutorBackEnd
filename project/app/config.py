@@ -19,9 +19,7 @@ class Settings(BaseSettings):
     google_redirect_uris: List[str] = json.loads(
         os.getenv("GOOGLE_REDIRECT_URIS", "[]")
     )
-    google_js_origins: List[str] = json.loads(
-        os.getenv("GOOGLE_JS_ORIGINS", "[]")
-    )
+    google_js_origins: List[str] = json.loads(os.getenv("GOOGLE_JS_ORIGINS", "[]"))
     top_domain: str = os.getenv("TOP_DOMAIN")
 
 
