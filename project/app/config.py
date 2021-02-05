@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     google_project_id: str = os.getenv("GOOGLE_PROJECT_ID")
     google_client_secret: str = os.getenv("GOOGLE_CLIENT_SECRET")
     google_redirect_uris: List[str] = json.loads(
-        os.getenv("GOOGLE_REDIRECT_URIS", "['none']")
+        os.getenv("GOOGLE_REDIRECT_URIS", "[]")
     )
     google_js_origins: List[str] = json.loads(
-        os.getenv("GOOGLE_JS_ORIGINS", "['none']")
+        os.getenv("GOOGLE_JS_ORIGINS", "[]")
     )
     top_domain: str = os.getenv("TOP_DOMAIN")
 
