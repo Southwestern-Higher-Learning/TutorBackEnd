@@ -65,7 +65,7 @@ jobs:
       - name: Migrations
         run: docker exec tutorapp-backend python app/db.py
       - name: Pytest
-        run: docker exec tutorapp-backend python -m pytest .
+        run: docker exec tutorapp-backend python -m pytest --import-mode=importlib
       - name: Flake8
         run: docker exec tutorapp-backend python -m flake8 .
       - name: Black
