@@ -1,8 +1,8 @@
+import json
 import logging
 import os
-import json
-from typing import List
 from functools import lru_cache
+from typing import List
 
 from pydantic import AnyUrl, BaseSettings
 
@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     google_redirect_uris: List[str] = json.loads(os.getenv("GOOGLE_REDIRECT_URIS"))
     google_js_origins: List[str] = json.loads(os.getenv("GOOGLE_JS_ORIGINS"))
     top_domain: str = os.getenv("TOP_DOMAIN")
+
 
 @lru_cache()
 def get_settings() -> Settings:
