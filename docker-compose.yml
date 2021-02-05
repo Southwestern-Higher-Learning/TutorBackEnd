@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   web:
-    build: ./project
+    build:
+      context: ./project
+      dockerfile: Dockerfile.prod
     command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
     volumes:
       - ./project:/usr/src/app
@@ -11,19 +13,32 @@ services:
     environment:
       - ENVIRONMENT=dev
       - TESTING=0
-      - DATABASE_URL=postgres://postgres:postgres@web-db:5432/web_dev        # new
       - DATABASE_TEST_URL=postgres://postgres:postgres@web-db:5432/web_test  # new
+      - OAUTHLIB_INSECURE_TRANSPORT=1
+    env_file:
+      - ".env"
     depends_on:   # new
-      - web-db
+      - cloud-sql-proxy
 
   # new
-  web-db:
-    build:
-      context: ./project/db
-      dockerfile: Dockerfile
-    command: -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-    expose:
-      - 5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+#  web-db:
+#    build:
+#      context: ./project/db
+#      dockerfile: Dockerfile
+#    command: -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+#    expose:
+#      - 5432
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+
+  cloud-sql-proxy:
+    image: gcr.io/cloudsql-docker/gce-proxy:1.11
+    command: /cloud_sql_proxy -instances=su-tutor-app:us-central1:tutorapp=tcp:0.0.0.0:5432 -credential_file=/config
+    volumes:
+      # this mounts your application default credential on the container, preventing the
+      # 'invalid json file "/config": google: read JWT from JSON credentials: 'type' field is "authorized_user" (expected "service_account")'
+      # error if you point to the actual credential file directly
+      - ./tutorappcreds.json:/config
+    ports:
+      - 5432:5432
