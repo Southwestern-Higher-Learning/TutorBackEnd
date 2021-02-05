@@ -43,6 +43,6 @@ RUN chown -R app:app $APP_HOME
 USER app
 
 # run entrypoint.sh
-ENTRYPOINT ["/home/app/web/entrypoint.sh"]
+# ENTRYPOINT ["/home/app/web/entrypoint.sh"]
 
 CMD gunicorn --bind 0.0.0.0:$PORT app.main:app -k uvicorn.workers.UvicornWorker --forwarded-allow-ips=*
