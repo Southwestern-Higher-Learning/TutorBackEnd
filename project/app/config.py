@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -21,6 +22,9 @@ class Settings(BaseSettings):
     )
     google_js_origins: List[str] = json.loads(os.getenv("GOOGLE_JS_ORIGINS", "[]"))
     top_domain: str = os.getenv("TOP_DOMAIN")
+    authjwt_secret_key: str = "secret"
+    authjwt_refresh_token_expires = False
+    authjwt_access_token_expires = datetime.timedelta(hours=12)
 
 
 @lru_cache()

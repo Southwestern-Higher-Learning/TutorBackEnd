@@ -1,11 +1,47 @@
+from fastapi_admin.models import AbstractUser
+from pydantic import BaseModel
 from tortoise import fields, models
+from tortoise.contrib.pydantic import pydantic_model_creator
 
 
-class TextSummary(models.Model):
-    url = fields.TextField()
-    summary = fields.TextField()
+class User(AbstractUser):
+    id = fields.BigIntField(pk=True)
+    email = fields.CharField(unique=True, max_length=100)
+    first_name = fields.CharField(unique=True, max_length=100)
+    last_name = fields.CharField(unique=True, max_length=100)
     created_at = fields.DatetimeField(auto_now_add=True)
-    description = fields.TextField()
+    updated_at = fields.DatetimeField(auto_now=True)
+    profile_url = fields.TextField()
+    description = fields.TextField(null=True)
+    is_tutor = fields.BooleanField(default=False)
+    password = fields.CharField(
+        max_length=200,
+        description="Will auto hash with raw password when change",
+        null=True,
+    )
+
+    creds: fields.OneToOneRelation["Credentials"]
 
     def __str__(self):
-        return self.url
+        return f"{self.first_name} {self.last_name}"
+
+    class PydanticMeta:
+        exclude = ["password", "username"]
+
+
+class Credentials(models.Model):
+    id = fields.BigIntField(pk=True)
+    json_field = fields.JSONField(null=True)
+    user = fields.OneToOneField("models.User", related_name="creds")
+
+
+User_Pydnatic = pydantic_model_creator(User, name="User")
+
+
+class UserCreate(BaseModel):
+    user: User_Pydnatic
+    access_token: str
+    refresh_token: str
+
+    class Config:
+        validate_assignment = True
