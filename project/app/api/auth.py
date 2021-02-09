@@ -81,7 +81,7 @@ def verify_creds(
     return id_info
 
 
-@router.post("/swap")
+@router.post("/swap", response_model=UserCreate)
 async def swap_code(
     request: Request,
     swap_info: SwapCodeIn,

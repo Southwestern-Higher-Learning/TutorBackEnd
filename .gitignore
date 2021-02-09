@@ -4,3 +4,4 @@ __pycache__
 /project/.coverage
 .env
 tutorappcreds.json
+/project/cloudbuild.yaml
