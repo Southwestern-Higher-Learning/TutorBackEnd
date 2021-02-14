@@ -47,12 +47,12 @@ def test_get_user_id(test_app, tutor_user_token_headers, event_loop):
 
 def test_get_user_id_unauthorized(test_app):
     r = test_app.get("/user/1")
-    assert r.status_code == 401
+    assert r.status_code == 403
 
 
 def test_get_user_me_unauthorized(test_app):
     r = test_app.get("/user/me")
-    assert r.status_code == 401
+    assert r.status_code == 403
 
 
 def test_patch_user_me(test_app, normal_user_token_headers, event_loop):
