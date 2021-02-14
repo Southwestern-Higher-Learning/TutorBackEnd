@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
 from app.models.pydnatic import NormalUserUpdate
 from app.models.tortoise import User, User_Pydnatic
 
-router = APIRouter(prefix="/user", tags=["auth"])
+router = APIRouter(prefix="/user", tags=["user"])
+
+bearer = HTTPBearer()
 
 
-async def find_current_user(Authorize: AuthJWT = Depends()) -> User:
+async def find_current_user(
+    Authorize: AuthJWT = Depends(), bearer=Depends(bearer)
+) -> User:
     Authorize.jwt_required()
 
     access_token_subject = Authorize.get_jwt_subject()
@@ -21,13 +26,13 @@ async def find_current_user(Authorize: AuthJWT = Depends()) -> User:
 
 
 # GET /user/me find the current user based on the access_token
-@router.get("/me", response_model=User_Pydnatic)
+@router.get("/me", response_model=User_Pydnatic, operation_id="authorize")
 async def get_current_user(current_user: User = Depends(find_current_user)):
     return await User_Pydnatic.from_tortoise_orm(current_user)
 
 
 # PATCH /user/me update user profile based on current user
-@router.patch("/me", response_model=User_Pydnatic)
+@router.patch("/me", response_model=User_Pydnatic, operation_id="authorize")
 async def patch_current_user(
     user_update: NormalUserUpdate, current_user: User = Depends(find_current_user)
 ):
@@ -36,6 +41,6 @@ async def patch_current_user(
 
 
 # GET /user/{user_id}
-@router.get("/{user_id}", response_model=User_Pydnatic)
+@router.get("/{user_id}", response_model=User_Pydnatic, operation_id="authorize")
 async def get_user_id(user_id: int, current_user: User = Depends(find_current_user)):
     return await User_Pydnatic.from_queryset_single(User.get(id=user_id))
