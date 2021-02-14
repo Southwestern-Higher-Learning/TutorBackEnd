@@ -1,0 +1,5 @@
+[flake8]
+# see https://lintlyci.github.io/Flake8Rules/ for a list of all rules
+ignore =
+	# module level import not at top of file
+	E402

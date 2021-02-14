@@ -7,8 +7,8 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 class User(AbstractUser):
     id = fields.BigIntField(pk=True)
     email = fields.CharField(unique=True, max_length=100)
-    first_name = fields.CharField(unique=True, max_length=100)
-    last_name = fields.CharField(unique=True, max_length=100)
+    first_name = fields.CharField(max_length=100)
+    last_name = fields.CharField(max_length=100)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
     profile_url = fields.TextField()

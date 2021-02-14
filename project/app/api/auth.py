@@ -149,3 +149,17 @@ async def get_or_create_user(
         access_token=Authorize.create_access_token(subject=user.email),
         refresh_token=Authorize.create_refresh_token(subject=user.email),
     )
+
+
+@router.get("/refresh")
+async def refresh_access_token(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_refresh_token_required()
+
+    user_email = Authorize.get_jwt_subject()
+
+    user = await User.get_or_none(email=user_email).first()
+
+    if user is None:
+        raise HTTPException(403, "JWT subject not found")
+
+    return {"access_token": Authorize.create_access_token(subject=user_email)}

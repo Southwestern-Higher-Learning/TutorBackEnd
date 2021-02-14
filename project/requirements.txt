@@ -16,3 +16,4 @@ google-auth-oauthlib
 google-auth-httplib2
 fastapi-jwt-auth
 fastapi-admin
+asynctest
