@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS "category" (
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP
 );;
-ALTER TABLE "user" DROP CONSTRAINT "uid_user_first_n_2d121b";
-ALTER TABLE "user" DROP CONSTRAINT "uid_user_last_na_3c4ee3";
+ALTER TABLE "user" DROP CONSTRAINT IF EXISTS "uid_user_first_n_2d121b";
+ALTER TABLE "user" DROP CONSTRAINT IF EXISTS "uid_user_last_na_3c4ee3";
 CREATE TABLE IF NOT EXISTS "user_categories" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "category_id" BIGINT NOT NULL REFERENCES "category" ("id") ON DELETE CASCADE,

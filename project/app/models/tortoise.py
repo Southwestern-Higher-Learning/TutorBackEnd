@@ -62,7 +62,8 @@ class UserCategories(models.Model):
         unique_together =(('user_id', 'category_id'),)
 
 
-Tortoise.init_models(["app.models.tortoise"], "models")
+Tortoise.init_models(["__main__"], "models")
+
 User_Pydnatic = pydantic_model_creator(User, name="User")
 _UserIn_Pydnatic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
 
