@@ -1,5 +1,5 @@
 from fastapi_admin.models import AbstractUser
-from pydantic import BaseModel
+from pydantic import BaseConfig, BaseModel
 from tortoise import fields, models
 from tortoise.contrib.pydantic import pydantic_model_creator
 
@@ -27,6 +27,7 @@ class User(AbstractUser):
 
     class PydanticMeta:
         exclude = ["password", "username"]
+        extra = "ignore"
 
 
 class Credentials(models.Model):
@@ -36,6 +37,12 @@ class Credentials(models.Model):
 
 
 User_Pydnatic = pydantic_model_creator(User, name="User")
+_UserIn_Pydnatic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
+
+
+class UserIn_Pydnatic(_UserIn_Pydnatic):
+    class Config(BaseConfig):
+        extra = "ignore"
 
 
 class UserCreate(BaseModel):

@@ -135,11 +135,10 @@ async def get_or_create_user(
         user.username = info["email"].split("@")[0]
         user.first_name = info["given_name"]
         user.last_name = info["family_name"]
-        user.profile_url = info["picture"]
         user.email = info["email"]
 
-        await user.save()
-
+    user.profile_url = info["picture"]
+    await user.save()
     creds, bo = await Credentials.get_or_create(user=user)
     creds.json_field = json.dumps(temp)
     await creds.save()

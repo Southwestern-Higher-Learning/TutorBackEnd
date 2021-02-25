@@ -11,3 +11,8 @@ class SwapCodeIn(BaseModel):
 class NormalUserUpdate(BaseModel):
     description: Optional[str]
     is_tutor: Optional[bool]
+
+
+class UserFilters(BaseModel):
+    is_tutor: Optional[bool]
+    is_superuser: Optional[bool]
