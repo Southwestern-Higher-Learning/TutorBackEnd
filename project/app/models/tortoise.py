@@ -1,6 +1,6 @@
 from fastapi_admin.models import AbstractUser
 from pydantic import BaseConfig, BaseModel
-from tortoise import fields, models
+from tortoise import Tortoise, fields, models
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 
@@ -22,11 +22,13 @@ class User(AbstractUser):
 
     creds: fields.OneToOneRelation["Credentials"]
 
+    categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField('models.Category', related_name="users", through="user_gategories", backward_key="user_id")
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
     class PydanticMeta:
-        exclude = ["password", "username"]
+        exclude = ["password", "username", "creds", "usercategories"]
         extra = "ignore"
 
 
@@ -36,9 +38,36 @@ class Credentials(models.Model):
     user = fields.OneToOneField("models.User", related_name="creds")
 
 
+class Category(models.Model):
+    id = fields.BigIntField(pk=True)
+    name = fields.CharField(max_length=30, unique=True)
+    locked = fields.BooleanField(default=False)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class PydanticMeta:
+        exclude = ["usercategories"]
+        extra = "ignore"
+
+
+class UserCategories(models.Model):
+    user = fields.ForeignKeyField("models.User", related_name="usercategories")
+    category = fields.ForeignKeyField("models.Category", related_name="usercategories")
+
+    class Meta:
+        table = "user_categories"
+        unique_together =(('user_id', 'category_id'),)
+
+
+Tortoise.init_models(["app.models.tortoise"], "models")
 User_Pydnatic = pydantic_model_creator(User, name="User")
 _UserIn_Pydnatic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
 
+Category_Pydnatic = pydantic_model_creator(Category, name="Category")
+CategoryIn_Pydnatic = pydantic_model_creator(Category, name="CategoryIn", exclude_readonly=True)
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
     class Config(BaseConfig):
