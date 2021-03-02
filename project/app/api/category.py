@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from app.api.user import find_current_user
+from app.models.tortoise import Category_Pydnatic, Category, User
 
 router = APIRouter(prefix="/category", tags=["category"])
 
@@ -6,6 +9,9 @@ router = APIRouter(prefix="/category", tags=["category"])
 # GET /
 # Must be normal user (find_current_user)
 # Get all categories
+@router.get("/", response_model=Category_Pydnatic)
+async def get_categories(current_user: User = Depends(find_current_user)):
+    return await Category_Pydnatic.from_queryset(Category.all())
 
 # GET /{id}
 # Must be normal user
