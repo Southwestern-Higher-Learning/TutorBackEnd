@@ -4,6 +4,8 @@ FROM python:3.8.6-slim-buster
 WORKDIR /usr/src/app
 
 # set environment variables
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
