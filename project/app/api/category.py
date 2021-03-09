@@ -29,7 +29,7 @@ async def get_categories(
 # GET /{id}
 # Must be normal user
 # Get category by ID
-@router.get("/{id}", response_model=Category_Pydnatic)
+@router.get("/{category_id}", response_model=Category_Pydnatic)
 async def get_category_id(
     category_id: int, current_user: User = Depends(find_current_user)
 ):
@@ -48,7 +48,7 @@ async def create_category(category: CategoryIn_Pydnatic):
 # PUT /{id}
 # Must be superuser
 # Update individual category
-@router.put("/{id}", response_model=Category_Pydnatic)
+@router.put("/{category_id}", response_model=Category_Pydnatic)
 async def put_user_id(
     category: CategoryIn_Pydnatic,
     category_id: int,
