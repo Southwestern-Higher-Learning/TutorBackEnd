@@ -73,12 +73,17 @@ User_Pydnatic = pydantic_model_creator(User, name="User")
 _UserIn_Pydnatic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
 
 Category_Pydnatic = pydantic_model_creator(Category, name="Category")
-CategoryIn_Pydnatic = pydantic_model_creator(
+_CategoryIn_Pydnatic = pydantic_model_creator(
     Category, name="CategoryIn", exclude_readonly=True
 )
 
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
+    class Config(BaseConfig):
+        extra = "ignore"
+
+
+class CategoryIn_Pydnatic(_CategoryIn_Pydnatic):
     class Config(BaseConfig):
         extra = "ignore"
 

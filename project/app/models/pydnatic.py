@@ -20,4 +20,4 @@ class UserFilters(BaseModel):
 
 
 class CategoryFilters(BaseModel):
-    name__icontains: Optional[bool]
+    name__icontains: Optional[str]
