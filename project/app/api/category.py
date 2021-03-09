@@ -1,10 +1,7 @@
-from typing import List
-
 from fastapi import APIRouter, Depends
 
 from app.api.user import find_current_superuser, find_current_user
-from app.models.tortoise import (Category, Category_Pydnatic,
-                                 CategoryIn_Pydnatic, User)
+from app.models.tortoise import Category, Category_Pydnatic, CategoryIn_Pydnatic, User
 
 router = APIRouter(prefix="/category", tags=["category"])
 
