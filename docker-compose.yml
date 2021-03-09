@@ -15,8 +15,6 @@ services:
       - TESTING=0
       - DATABASE_TEST_URL=postgres://postgres:postgres@web-db:5432/web_test  # new
       - OAUTHLIB_INSECURE_TRANSPORT=1
-      - LC_ALL=en_US.utf-8
-      - LANG=en_US.utf-8
     env_file:
       - ".env"
     depends_on:   # new
