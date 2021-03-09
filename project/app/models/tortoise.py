@@ -22,7 +22,12 @@ class User(AbstractUser):
 
     creds: fields.OneToOneRelation["Credentials"]
 
-    categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField('models.Category', related_name="users", through="user_gategories", backward_key="user_id")
+    categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField(
+        "models.Category",
+        related_name="users",
+        through="user_gategories",
+        backward_key="user_id",
+    )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -59,16 +64,19 @@ class UserCategories(models.Model):
 
     class Meta:
         table = "user_categories"
-        unique_together =(('user_id', 'category_id'),)
+        unique_together = (("user_id", "category_id"),)
 
 
-Tortoise.init_models(["__main__"], "models")
+Tortoise.init_models(["app.models.tortoise"], "models")
 
 User_Pydnatic = pydantic_model_creator(User, name="User")
 _UserIn_Pydnatic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
 
 Category_Pydnatic = pydantic_model_creator(Category, name="Category")
-CategoryIn_Pydnatic = pydantic_model_creator(Category, name="CategoryIn", exclude_readonly=True)
+CategoryIn_Pydnatic = pydantic_model_creator(
+    Category, name="CategoryIn", exclude_readonly=True
+)
+
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
     class Config(BaseConfig):
