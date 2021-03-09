@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "projects/**"
 
 env:
   IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/tutor-backend

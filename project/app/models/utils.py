@@ -10,6 +10,7 @@ class PaginateModel:
         self.model = model
         self.py_model = py_model
 
+    # Called on Depends(...)
     def __call__(
         self, request: Request, _sort: str, _order: str, _start: int = 0, _end: int = 20
     ) -> queryset.QuerySet[models.Model]:
