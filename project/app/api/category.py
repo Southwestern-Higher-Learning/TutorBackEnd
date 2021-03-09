@@ -12,14 +12,6 @@ router = APIRouter(prefix="/category", tags=["category"])
 # GET /
 # Must be normal user (find_current_user)
 # Get all categories
-@router.get("/", response_model=List[Category_Pydnatic])
-async def get_all_categories(current_user: User = Depends(find_current_user)):
-    return await Category_Pydnatic.from_queryset(Category.all())
-
-
-async def get_categories(current_user: User = Depends(find_current_user)):
-    return await Category_Pydnatic.from_queryset(Category.all())
-
 
 # GET /{id}
 # Must be normal user
