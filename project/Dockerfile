@@ -9,8 +9,12 @@ ENV PYTHONUNBUFFERED 1
 
 # install system dependencies
 RUN apt-get update \
-  && apt-get -y install netcat gcc \
+  && apt-get -y install netcat gcc sudo curl wget locales \
   && apt-get clean
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+ENV LANGUAGE=C.UTF-8
 
 # install python dependencies
 RUN pip install --upgrade pip
