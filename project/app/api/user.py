@@ -1,12 +1,12 @@
-from typing import List
 import logging
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
 from app.models.pydnatic import NormalUserUpdate, UserFilters
-from app.models.tortoise import User, User_Pydnatic, UserIn_Pydnatic, Category
+from app.models.tortoise import Category, User, User_Pydnatic, UserIn_Pydnatic
 from app.models.utils import PaginateModel
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -80,7 +80,7 @@ async def put_user_id(
     current_superuser: User = Depends(find_current_superuser),
 ):
     update_dict = user_in.dict(exclude_unset=True)
-    del update_dict['categories_ids']
+    del update_dict["categories_ids"]
     await User.filter(id=user_id).update(**update_dict)
     log.info(user_in)
     user = await User.filter(id=user_id).first()

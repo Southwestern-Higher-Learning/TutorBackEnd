@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from fastapi_admin.models import AbstractUser
 from pydantic import BaseConfig, BaseModel
@@ -90,6 +90,7 @@ _CategoryIn_Pydnatic = pydantic_model_creator(
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
     categories_ids: Optional[List[int]]
+
     class Config(BaseConfig):
         extra = "ignore"
 

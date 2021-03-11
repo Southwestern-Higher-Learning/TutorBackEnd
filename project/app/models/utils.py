@@ -1,6 +1,6 @@
-from typing import Type, Optional, List
+from typing import List, Optional, Type
 
-from fastapi import Request, Query
+from fastapi import Query, Request
 from pydantic import BaseModel
 from tortoise import models, queryset
 
@@ -12,12 +12,18 @@ class PaginateModel:
 
     # Called on Depends(...)
     def __call__(
-        self, request: Request, _sort: str = "id", _order: str = "asc", _start: int = 0, _end: int = 20, id:Optional[List[int]]=Query(None)
+        self,
+        request: Request,
+        _sort: str = "id",
+        _order: str = "asc",
+        _start: int = 0,
+        _end: int = 20,
+        id: Optional[List[int]] = Query(None),
     ) -> queryset.QuerySet[models.Model]:
         filters = self.py_model.parse_obj(request.query_params)
         filters_dict = filters.dict(exclude_unset=True)
         if id is not None:
-            filters_dict['id__in'] = id
+            filters_dict["id__in"] = id
         order = _sort
         if _order.lower() == "desc":
             order = "-" + order
