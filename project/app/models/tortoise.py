@@ -1,7 +1,10 @@
+from typing import Optional, List
+
 from fastapi_admin.models import AbstractUser
 from pydantic import BaseConfig, BaseModel
 from tortoise import Tortoise, fields, models
 from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.exceptions import NoValuesFetched
 
 
 class User(AbstractUser):
@@ -29,12 +32,19 @@ class User(AbstractUser):
         backward_key="user_id",
     )
 
+    def categories_ids(self) -> List[int]:
+        try:
+            return [category.id for category in self.categories]
+        except NoValuesFetched:
+            return []
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
     class PydanticMeta:
         exclude = ["password", "username", "creds", "usercategories"]
         extra = "ignore"
+        computed = ("categories_ids",)
 
 
 class Credentials(models.Model):
@@ -54,7 +64,7 @@ class Category(models.Model):
         return self.name
 
     class PydanticMeta:
-        exclude = ["usercategories"]
+        exclude = ["usercategories", "users"]
         extra = "ignore"
 
 
@@ -79,6 +89,7 @@ _CategoryIn_Pydnatic = pydantic_model_creator(
 
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
+    categories_ids: Optional[List[int]]
     class Config(BaseConfig):
         extra = "ignore"
 
