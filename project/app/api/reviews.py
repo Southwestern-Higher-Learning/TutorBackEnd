@@ -27,7 +27,7 @@ async def get_reviews(
 # GET /
 # must by normal user
 # Get reviews by id
-@router.get("/", response_model=Review_Pydnatic)
+@router.get("/{review_id}", response_model=Review_Pydnatic)
 async def get_review_id(
     review_id: int, current_user: User = Depends(find_current_user)
 ):
@@ -41,3 +41,15 @@ async def create_review(review: ReviewIn_Pydnatic):
     review_obj = await Review.create(**review.dict(exclude_unset=True))
     return await Review_Pydnatic.from_tortoise_orm(review_obj)
 
+
+# PUT /
+# must be superuser
+# update a review
+@router.put("/{review_id}", response_model=Review_Pydnatic)
+async def put_review_id(
+    review: ReviewIn_Pydnatic,
+    review_id: int,
+    current_superuser: User = Depends(find_current_superuser),
+):
+    await Review.filter(id=review_id).update(**review.dict(exclude_unset=True))
+    return await Review_Pydnatic.from_queryset_single(Review.get(id=review_id))
