@@ -37,6 +37,7 @@ async def get_review_id(
 # must be normal user
 # make a new review
 @router.post("/", response_model=Review_Pydnatic)
-async def create_category(review: ReviewIn_Pydnatic):
+async def create_review(review: ReviewIn_Pydnatic):
     review_obj = await Review.create(**review.dict(exclude_unset=True))
     return await Review_Pydnatic.from_tortoise_orm(review_obj)
+
