@@ -1,6 +1,7 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException
+from google.rpc.status_pb2 import Status
 
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import ReviewFilters
@@ -24,7 +25,7 @@ async def get_reviews(
     response.headers["X-Total-Count"] = f"{len_reviews}"
     return await Review_Pydnatic.from_queryset(reviews)
 
-# GET /
+# GET /{review_id}
 # must by normal user
 # Get reviews by id
 @router.get("/{review_id}", response_model=Review_Pydnatic)
@@ -42,7 +43,7 @@ async def create_review(review: ReviewIn_Pydnatic):
     return await Review_Pydnatic.from_tortoise_orm(review_obj)
 
 
-# PUT /
+# PUT /{review_id}
 # must be superuser
 # update a review
 @router.put("/{review_id}", response_model=Review_Pydnatic)
@@ -53,3 +54,13 @@ async def put_review_id(
 ):
     await Review.filter(id=review_id).update(**review.dict(exclude_unset=True))
     return await Review_Pydnatic.from_queryset_single(Review.get(id=review_id))
+
+# DELETE /{review_id}
+# must be superuser
+# delete a review
+@router.delete("/{review_id}", response_model=Review_Pydnatic)
+async def delete_review(review_id: int):
+    deleted_count = await Review.filter(id=review_id).delete()
+    if not deleted_count:
+        raise HTTPException(status_code=404, detail=f"User {review_id} not found")
+    return Status(message=f"Deleted user {review_id}")
