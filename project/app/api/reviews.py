@@ -23,3 +23,13 @@ async def get_reviews(
     len_reviews = await reviews.count()
     response.headers["X-Total-Count"] = f"{len_reviews}"
     return await Review_Pydnatic.from_queryset(reviews)
+
+# GET /
+# must by normal user
+# Get reviews by id
+@router.get("/", response_model=Review_Pydnatic)
+async def get_review_id(
+    review_id: int, current_user: User = Depends(find_current_user)
+):
+    return await Review_Pydnatic.from_queryset_single(Review.get(id=review_id))
+
