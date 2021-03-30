@@ -19,7 +19,7 @@ pageinate_report = PaginateModel(Report, ReportFilters)
 @router.get("/", response_model=List[Report_Pydnatic])
 async def get_reports(
         response: Response,
-        current_user: User = Depends(find_current_user),
+        current_superuser: User = Depends(find_current_superuser),
         reports=Depends(pageinate_report),
 ):
     len_reports = await reports.count()
@@ -28,11 +28,12 @@ async def get_reports(
 
 
 # GET /
-# must by normal user
+# must by superuser user
 # Get report by id
 @router.get("/{report_id}", response_model=Report_Pydnatic)
 async def get_report_id(
-    report_id: int, current_user: User = Depends(find_current_user)
+    report_id: int,
+    current_superuser: User = Depends(find_current_superuser)
 ):
     return await Report_Pydnatic.from_queryset_single(Report.get(id=report_id))
 
@@ -66,5 +67,11 @@ async def update_report(
 # must be superuser
 # delete a report
 @router.delete("/", response_model=Report_Pydnatic)
-async def delete_report(report_id: int):
-    await Report.filter(id=user_id).delete()
+async def delete_report(
+        report_id: int,
+        current_superuser: User = Depends(find_current_superuser)
+):
+    deleted_report = await Report.filter(id=report_id).delete()
+    if not deleted_report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    return Status(message=f"Delete Report {report_id}")

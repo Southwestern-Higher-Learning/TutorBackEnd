@@ -22,5 +22,6 @@ class UserFilters(BaseModel):
 class CategoryFilters(BaseModel):
     name__icontains: Optional[str]
 
+
 class ReportFilters(BaseModel):
     name__icontains: Optional[str]
