@@ -134,6 +134,7 @@ ReportIn_Pydnatic = pydantic_model_creator(Report, name="ReportIn")
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
     categories_ids: Optional[List[int]]
+    
     class Config(BaseConfig):
         extra = "ignore"
 
