@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Response, HTTPException
+from fastapi.responses import JSONResponse
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import ReviewFilters
 from app.models.tortoise import Review, Review_Pydnatic, ReviewIn_Pydnatic, User
@@ -67,4 +68,4 @@ async def delete_review(
     deleted_count = await Review.filter(id=review_id).delete()
     if not deleted_count:
         raise HTTPException(status_code=404, detail=f"User {review_id} not found")
-    return Response(message=f"application/xml {review_id}")
+    return JSONResponse(content={"message": f"Review deleted {review_id}"})
