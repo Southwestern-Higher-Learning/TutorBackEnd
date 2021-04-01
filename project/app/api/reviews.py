@@ -1,7 +1,6 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Response, HTTPException
-from fastapi import FastAPI, Response
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import ReviewFilters
 from app.models.tortoise import Review, Review_Pydnatic, ReviewIn_Pydnatic, User
