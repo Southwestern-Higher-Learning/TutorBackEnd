@@ -1,8 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Response, HTTPException
-from google.rpc.status_pb2 import Status
-
+from fastapi import FastAPI, Response
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import ReviewFilters
 from app.models.tortoise import Review, Review_Pydnatic, ReviewIn_Pydnatic, User
@@ -11,6 +10,7 @@ from app.models.utils import PaginateModel
 router = APIRouter(prefix="/category", tags=["category"])
 
 pageinate_review = PaginateModel(Review, ReviewFilters)
+
 
 # GET /
 # must by normal user
@@ -25,6 +25,7 @@ async def get_reviews(
     response.headers["X-Total-Count"] = f"{len_reviews}"
     return await Review_Pydnatic.from_queryset(reviews)
 
+
 # GET /{review_id}
 # must by normal user
 # Get reviews by id
@@ -33,6 +34,7 @@ async def get_review_id(
     review_id: int, current_user: User = Depends(find_current_user)
 ):
     return await Review_Pydnatic.from_queryset_single(Review.get(id=review_id))
+
 
 # POST /
 # must be normal user
@@ -55,12 +57,15 @@ async def put_review_id(
     await Review.filter(id=review_id).update(**review.dict(exclude_unset=True))
     return await Review_Pydnatic.from_queryset_single(Review.get(id=review_id))
 
+
 # DELETE /{review_id}
 # must be superuser
 # delete a review
 @router.delete("/{review_id}", response_model=Review_Pydnatic)
-async def delete_review(review_id: int):
+async def delete_review(
+        review_id: int,
+        current_superuser: User = Depends(find_current_superuser)):
     deleted_count = await Review.filter(id=review_id).delete()
     if not deleted_count:
         raise HTTPException(status_code=404, detail=f"User {review_id} not found")
-    return Status(message=f"Deleted user {review_id}")
+    return Response(message=f"application/xml {review_id}")
