@@ -131,6 +131,7 @@ ReviewIn_Pydnatic = pydantic_model_creator(Review, name="ReviewIn")
 Report_Pydnatic = pydantic_model_creator(Report, name="Report")
 ReportIn_Pydnatic = pydantic_model_creator(Report, name="ReportIn")
 
+
 class UserIn_Pydnatic(_UserIn_Pydnatic):
     categories_ids: Optional[List[int]]
 

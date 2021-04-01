@@ -23,3 +23,7 @@ class UserFilters(BaseModel):
 
 class CategoryFilters(BaseModel):
     name__icontains: Optional[str]
+
+
+class ReviewFilters(object):
+    reviewee_id: Optional[int]
