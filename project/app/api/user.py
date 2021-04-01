@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -5,7 +6,7 @@ from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
 from app.models.pydnatic import NormalUserUpdate, UserFilters
-from app.models.tortoise import User, User_Pydnatic, UserIn_Pydnatic
+from app.models.tortoise import Category, User, User_Pydnatic, UserIn_Pydnatic
 from app.models.utils import PaginateModel
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -13,6 +14,8 @@ router = APIRouter(prefix="/user", tags=["user"])
 bearer = HTTPBearer()
 
 pageinate_user = PaginateModel(User, UserFilters)
+
+log = logging.getLogger("uvicorn")
 
 
 async def find_current_user(
@@ -72,9 +75,16 @@ async def get_all_users(
 
 @router.put("/{user_id}", response_model=User_Pydnatic)
 async def put_user_id(
-    user: UserIn_Pydnatic,
+    user_in: UserIn_Pydnatic,
     user_id: int,
     current_superuser: User = Depends(find_current_superuser),
 ):
-    await User.filter(id=user_id).update(**user.dict(exclude_unset=True))
+    update_dict = user_in.dict(exclude_unset=True)
+    del update_dict["categories_ids"]
+    await User.filter(id=user_id).update(**update_dict)
+    log.info(user_in)
+    user = await User.filter(id=user_id).first()
+    await user.categories.clear()
+    categories = await Category.filter(id__in=user_in.categories_ids).all()
+    await user.categories.add(*categories)
     return await User_Pydnatic.from_queryset_single(User.get(id=user_id))

@@ -17,6 +17,8 @@ class UserFilters(BaseModel):
     is_tutor: Optional[bool]
     is_superuser: Optional[bool]
     first_name__icontains: Optional[str]
+    email__icontains: Optional[str]
+    categories__name__icontains: Optional[str]
 
 
 class CategoryFilters(BaseModel):

@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "projects/**"
 
 env:
   IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/tutor-backend
@@ -68,10 +66,10 @@ jobs:
             -e DATABASE_TEST_URL=sqlite://sqlite.db \
             -p 5003:8765 \
             ${{ env.IMAGE }}:latest
-      - name: Migrations
-        run: docker exec tutorapp-backend python app/db.py
-      - name: Pytest
-        run: docker exec tutorapp-backend python -m pytest --import-mode=importlib
+#      - name: Migrations
+#        run: docker exec tutorapp-backend python app/db.py
+#      - name: Pytest
+#        run: docker exec tutorapp-backend python -m pytest --import-mode=importlib
       - name: Flake8
         run: docker exec tutorapp-backend python -m flake8 .
       - name: Black
