@@ -25,5 +25,5 @@ class CategoryFilters(BaseModel):
     name__icontains: Optional[str]
 
 
-class ReviewFilters(object):
+class ReviewFilters(BaseModel):
     reviewee_id: Optional[int]

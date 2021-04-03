@@ -21,6 +21,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
     "openid",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events"
 ]
 
 
@@ -43,7 +45,6 @@ def get_google_info(settings: Settings = Depends(get_settings)):
 def get_client_auth(request: Request, google_info=Depends(get_google_info)):
     flow = google_auth_oauthlib.flow.Flow.from_client_config(google_info, scopes=SCOPES)
     flow.redirect_uri = request.url_for("callback")
-    logger.info(request.url_for("callback"))
 
     authorization_url, _ = flow.authorization_url(
         # Enable offline access so that you can refresh an access token without
@@ -91,7 +92,6 @@ async def swap_code(
 ):
     flow = google_auth_oauthlib.flow.Flow.from_client_config(google_info, scopes=SCOPES)
     flow.redirect_uri = swap_info.redirect_uri
-    logger.info(swap_info.redirect_uri)
     flow.fetch_token(code=swap_info.code)
 
     info = verify_creds(flow, google_info, settings)
@@ -125,7 +125,7 @@ async def get_or_create_user(
         "refresh_token": google_creds.refresh_token,
         "token_uri": google_creds.token_uri,
         "scopes": google_creds.scopes,
-        "expiry": datetime.datetime.strftime(google_creds.expiry, "%Y-%m-%d %H:%M:%S"),
+        "expiry": google_creds.expiry.astimezone().isoformat() + "Z",
     }
 
     user = await User.get_or_none(email=info["email"]).first()
@@ -140,7 +140,7 @@ async def get_or_create_user(
     user.profile_url = info["picture"]
     await user.save()
     creds, bo = await Credentials.get_or_create(user=user)
-    creds.json_field = json.dumps(temp)
+    creds.json_field = google_creds.to_json()
     await creds.save()
 
     return UserCreate(

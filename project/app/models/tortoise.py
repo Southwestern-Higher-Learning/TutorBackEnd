@@ -1,11 +1,22 @@
+import datetime
 from enum import IntEnum
-from typing import List, Optional
+from typing import List, Optional, Type
+import logging
 
+from fastapi import HTTPException
 from fastapi_admin.models import AbstractUser
 from pydantic import BaseConfig, BaseModel
 from tortoise import Tortoise, fields, models
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import NoValuesFetched
+from google.oauth2.credentials import Credentials as Creds
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from tortoise.signals import pre_save
+
+from app.config import get_settings
+
+log = logging.getLogger("uvicorn")
 
 
 class User(AbstractUser):
@@ -23,6 +34,7 @@ class User(AbstractUser):
         description="Will auto hash with raw password when change",
         null=True,
     )
+    google_calendar_id = fields.CharField(max_length=255, null=True)
 
     creds: fields.OneToOneRelation["Credentials"]
 
@@ -45,6 +57,71 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+    async def get_creds(self) -> Creds:
+        settings = get_settings()
+        await self.fetch_related("creds")
+        creds = self.creds.json_field
+        # return Creds(
+        #     token=creds['token'],
+        #     refresh_token=creds['refresh_token'],
+        #     token_uri=creds['token_uri'],
+        #     client_id=settings.google_client_id,
+        #     client_secret=settings.google_client_secret,
+        #     expiry=datetime.datetime.fromisoformat(creds['expiry'].replace("Z", "+00:00")),
+        #     scopes=creds['scopes']
+        # )
+        return Creds.from_authorized_user_info(creds)
+
+    async def update_calendar(self):
+        if self.is_tutor and self.google_calendar_id is None:
+            service = await self.get_calendar_service()
+
+            calendar = {
+                "summary": "TutorApp Schedule",
+                "timeZone": "America/Chicago"
+            }
+
+            created_calendar = service.calendars().insert(body=calendar).execute()
+
+            self.google_calendar_id = created_calendar['id']
+            await self.save()
+
+    async def get_calendar_service(self):
+        creds = await self.get_creds()
+        if creds.expired:
+            creds.refresh(Request())
+        self.creds.json_field = creds.to_json()
+        await self.creds.save()
+
+        return build('calendar', 'v3', credentials=creds)
+
+    async def get_events(self, time_min: datetime.datetime, time_max: datetime.datetime):
+        if self.google_calendar_id is None:
+            raise HTTPException(404, "No Calendar found")
+
+        service = await self.get_calendar_service()
+
+        calendar = service.calendars().get(calendarId=self.google_calendar_id).execute()
+
+        if 'summary' not in calendar:
+            raise HTTPException(404, "No Calendar found")
+
+        time_min = time_min.astimezone().isoformat()
+        time_max = time_max.astimezone().isoformat()
+
+        event_list = []
+        page_token = None
+
+        while True:
+            events = service.events().list(calendarId=self.google_calendar_id, pageToken=page_token, timeMin=time_min, timeMax=time_max).execute()
+            event_list.extend(events['items'])
+            page_token = events.get('nextPageToken')
+            if not page_token:
+                break
+
+        return event_list
 
     class PydanticMeta:
         exclude = ["password", "username", "creds", "usercategories"]
