@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import List, Optional
 
 from fastapi_admin.models import AbstractUser
@@ -31,6 +32,10 @@ class User(AbstractUser):
         through="user_gategories",
         backward_key="user_id",
     )
+
+    reviews: fields.ReverseRelation["Review"]
+
+    written_reviews: fields.ReverseRelation["Review"]
 
     def categories_ids(self) -> List[int]:
         try:
@@ -77,6 +82,39 @@ class UserCategories(models.Model):
         unique_together = (("user_id", "category_id"),)
 
 
+class Review(models.Model):
+    id = fields.BigIntField(pk=True)
+    reviewer = fields.ForeignKeyField("models.User", related_name="written_reviews")
+    reviewee = fields.ForeignKeyField("models.User", related_name="reviews")
+    rating = fields.IntField()
+    content = fields.TextField()
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+    class PydanticMeta:
+        exclude = ["userwrittenreviews, userreviews"]
+        extra = "ignore"
+
+    class Meta:
+        unique_together = (("reviewer_id", "reviewee_id"),)
+
+
+class ReportType(IntEnum):
+    user = 0
+    review = 0
+
+
+class Report(models.Model):
+    id = fields.BigIntField(pk=True)
+    type = fields.IntEnumField(ReportType)
+    reference_id = fields.BigIntField()
+    user = fields.OneToOneField("models.User")
+    reason = fields.CharField(max_length=200)
+    description = fields.TextField(null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+
 Tortoise.init_models(["app.models.tortoise"], "models")
 
 User_Pydnatic = pydantic_model_creator(User, name="User")
@@ -86,6 +124,12 @@ Category_Pydnatic = pydantic_model_creator(Category, name="Category")
 _CategoryIn_Pydnatic = pydantic_model_creator(
     Category, name="CategoryIn", exclude_readonly=True
 )
+
+Review_Pydnatic = pydantic_model_creator(Review, name="Reviews")
+ReviewIn_Pydnatic = pydantic_model_creator(Review, name="ReviewIn")
+
+Report_Pydnatic = pydantic_model_creator(Report, name="Report")
+ReportIn_Pydnatic = pydantic_model_creator(Report, name="ReportIn")
 
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
