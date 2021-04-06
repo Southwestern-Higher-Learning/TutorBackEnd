@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
-from app.api import auth, category, ping, reports, user, session
+from app.api import auth, category, ping, reports, user, reviews, session
 from app.config import get_settings
 from app.db import init_db
 
@@ -22,6 +22,7 @@ def create_application() -> FastAPI:
     application.include_router(category.router)
     application.include_router(reports.router)
     application.include_router(session.router)
+    application.include_router(reviews.router)
 
     application.add_middleware(
         CORSMiddleware,
