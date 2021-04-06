@@ -31,3 +31,7 @@ class ReviewFilters(BaseModel):
 
 class ReportFilters(BaseModel):
     pass
+
+
+class SessionFilters(BaseModel):
+    pass
