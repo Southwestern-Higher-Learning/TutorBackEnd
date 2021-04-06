@@ -41,7 +41,7 @@ class User(AbstractUser):
     categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField(
         "models.Category",
         related_name="users",
-        through="user_gategories",
+        through="user_categories",
         backward_key="user_id",
     )
 
@@ -115,7 +115,7 @@ class User(AbstractUser):
         page_token = None
 
         while True:
-            events = service.events().list(calendarId=self.google_calendar_id, pageToken=page_token, timeMin=time_min, timeMax=time_max).execute()
+            events = service.events().list(calendarId=self.google_calendar_id, pageToken=page_token, timeMin=time_min, timeMax=time_max, singleEvents=True).execute()
             event_list.extend(events['items'])
             page_token = events.get('nextPageToken')
             if not page_token:
@@ -124,7 +124,7 @@ class User(AbstractUser):
         return event_list
 
     class PydanticMeta:
-        exclude = ["password", "username", "creds", "usercategories"]
+        exclude = ["password", "username", "creds", "usercategories", "studentsessions", "student_sessions", "tutor_sessions"]
         extra = "ignore"
         computed = ("categories_ids",)
 
@@ -146,7 +146,7 @@ class Category(models.Model):
         return self.name
 
     class PydanticMeta:
-        exclude = ["usercategories", "users"]
+        exclude = ["usercategories", "users", "studentsessions"]
         extra = "ignore"
 
 
@@ -178,7 +178,7 @@ class Review(models.Model):
 
 class ReportType(IntEnum):
     user = 0
-    review = 0
+    review = 1
 
 
 class Report(models.Model):
@@ -192,6 +192,42 @@ class Report(models.Model):
     updated_at = fields.DatetimeField(auto_now=True)
 
 
+class StudentSessions(models.Model):
+    session = fields.ForeignKeyField("models.Session", related_name="studentsessions")
+    user = fields.ForeignKeyField("models.User", related_name="studentsessions")
+    category = fields.ForeignKeyField("models.Category", related_name="studentsessions")
+
+    class Meta:
+        table = "student_session"
+        unique_together = (("session_id", "student_id"),)
+
+
+class Session(models.Model):
+    id = fields.BigIntField(pk=True)
+    tutor = fields.ForeignKeyField("models.User", related_name="tutor_sessions")
+    students: fields.ManyToManyRelation["Category"] = fields.ManyToManyField(
+        "models.User",
+        related_name="student_sessions",
+        through="student_session",
+        backward_key="session_id",
+    )
+    start_time = fields.DatetimeField(null=True)
+    event_id = fields.CharField(max_length=255)
+
+    def tutor_id(self):
+        return self.tutor.id
+
+    def student_ids(self) -> List[int]:
+        try:
+            return [student.id for student in self.students]
+        except NoValuesFetched:
+            return []
+
+    class PydanticMeta:
+        exclude = ["tutor", "students", "studentsessions"]
+        computed = ("tutor_id", "student_ids")
+
+
 Tortoise.init_models(["app.models.tortoise"], "models")
 
 User_Pydnatic = pydantic_model_creator(User, name="User")
@@ -203,10 +239,13 @@ _CategoryIn_Pydnatic = pydantic_model_creator(
 )
 
 Review_Pydnatic = pydantic_model_creator(Review, name="Reviews")
-ReviewIn_Pydnatic = pydantic_model_creator(Review, name="ReviewIn")
+ReviewIn_Pydnatic = pydantic_model_creator(Review, name="ReviewIn", exclude_readonly=True)
 
 Report_Pydnatic = pydantic_model_creator(Report, name="Report")
-ReportIn_Pydnatic = pydantic_model_creator(Report, name="ReportIn")
+ReportIn_Pydnatic = pydantic_model_creator(Report, name="ReportIn", exclude_readonly=True)
+
+Session_Pydnatic = pydantic_model_creator(Session, name="Sessions")
+# _SessionIn_Pydnatic = pydantic_model_creator(Session, name="SessionIn", exclude_readonly=True)
 
 
 class UserIn_Pydnatic(_UserIn_Pydnatic):
@@ -219,6 +258,12 @@ class UserIn_Pydnatic(_UserIn_Pydnatic):
 class CategoryIn_Pydnatic(_CategoryIn_Pydnatic):
     class Config(BaseConfig):
         extra = "ignore"
+
+
+class SessionIn_Pydnatic(BaseModel):
+    tutor_id: int
+    event_id: str
+    category_id: int
 
 
 class UserCreate(BaseModel):

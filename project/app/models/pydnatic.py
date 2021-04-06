@@ -27,3 +27,11 @@ class CategoryFilters(BaseModel):
 
 class ReviewFilters(BaseModel):
     reviewee_id: Optional[int]
+
+
+class ReportFilters(BaseModel):
+    pass
+
+
+class SessionFilters(BaseModel):
+    pass
