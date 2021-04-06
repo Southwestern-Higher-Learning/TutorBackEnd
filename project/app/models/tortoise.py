@@ -116,7 +116,15 @@ class User(AbstractUser):
 
         while True:
             events = service.events().list(calendarId=self.google_calendar_id, pageToken=page_token, timeMin=time_min, timeMax=time_max, singleEvents=True).execute()
-            event_list.extend(events['items'])
+            for event in events['items']:
+                event_list.append({
+                        "id": event['id'],
+                        "start_time": event['start']['dateTime'],
+                        "end_time": event['end']['dateTime'],
+                        "summary": event['summary'],
+                    })
+            # event_list.extend(events['items'])
+            # formatted_event =
             page_token = events.get('nextPageToken')
             if not page_token:
                 break
