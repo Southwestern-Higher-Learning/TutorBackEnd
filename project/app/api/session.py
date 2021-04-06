@@ -1,18 +1,21 @@
-from typing import List
-import secrets
-import string
-import random
 import datetime
 import logging
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi.responses import JSONResponse
+from googleapiclient.errors import HttpError
 
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import SessionFilters
-from app.models.tortoise import Session_Pydnatic, SessionIn_Pydnatic, User, Session, StudentSessions, Category
+from app.models.tortoise import (
+    Category,
+    Session,
+    Session_Pydnatic,
+    SessionIn_Pydnatic,
+    StudentSessions,
+    User,
+)
 from app.models.utils import PaginateModel
-from googleapiclient.errors import HttpError
 
 router = APIRouter(prefix="/session", tags=["sessions"])
 
@@ -27,56 +30,78 @@ async def get_categories(
     current_user: User = Depends(find_current_superuser),
     sessions=Depends(paginate_sessions),
 ):
-    len_categories = await categories.count()
-    response.headers["X-Total-Count"] = f"{len_categories}"
-    return await Session_Pydnatic.from_queryset(categories)
+    len_sessions = await sessions.count()
+    response.headers["X-Total-Count"] = f"{len_sessions}"
+    return await Session_Pydnatic.from_queryset(sessions)
 
 
 @router.post("/", response_model=Session_Pydnatic)
 async def create_session(
-    session_in: SessionIn_Pydnatic,
-    current_user: User = Depends(find_current_user)
+    session_in: SessionIn_Pydnatic, current_user: User = Depends(find_current_user)
 ):
     tutor: User = await User.get_or_none(id=session_in.tutor_id)
     if tutor is None:
-        raise HTTPException(status_code=404, detail=f"Tutor {session_in.tutor_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Tutor {session_in.tutor_id} not found"
+        )
 
     category = await Category.get_or_none(id=session_in.category_id)
 
     if category is None:
-        raise HTTPException(status_code=404, detail=f"Category {session_in.category_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Category {session_in.category_id} not found"
+        )
 
     tutor_calendar = await tutor.get_calendar_service()
     try:
-        event = tutor_calendar.events().get(calendarId=tutor.google_calendar_id, eventId=session_in.event_id).execute()
+        event = (
+            tutor_calendar.events()
+            .get(calendarId=tutor.google_calendar_id, eventId=session_in.event_id)
+            .execute()
+        )
     except HttpError as e:
         log.info(e)
         raise HTTPException(status_code=404, detail="Calendar w/ id not found")
 
-    old_event_id = event['id']
-    # del event['id']
-    event['summary'] = "[SU Guidance] Session"
-    attendees = event.get('attendees', [{"email": tutor.email, "responseStatus": "accepted"}])
-    attendees.append({ "email": current_user.email })
-    event['attendees'] = attendees
+    event["summary"] = "[SU Guidance] Session"
+    attendees = event.get(
+        "attendees", [{"email": tutor.email, "responseStatus": "accepted"}]
+    )
+    attendees.append({"email": current_user.email})
+    event["attendees"] = attendees
 
     try:
-        new_event = tutor_calendar.events().update(calendarId=tutor.google_calendar_id, eventId=event['id'], body=event, sendUpdates="all").execute()
+        new_event = (
+            tutor_calendar.events()
+            .update(
+                calendarId=tutor.google_calendar_id,
+                eventId=event["id"],
+                body=event,
+                sendUpdates="all",
+            )
+            .execute()
+        )
     except HttpError as e:
         log.info(e.uri)
         log.info(e.content)
-        raise HTTPException(status_code=404, detail="Calendar w/ id not found when creating")
+        raise HTTPException(
+            status_code=404, detail="Calendar w/ id not found when creating"
+        )
 
     log.info(new_event)
 
-    if 'summary' not in new_event:
-        raise HTTPException(status_code=500, detail=f"Event {session_in.event_id} not updated")
+    if "summary" not in new_event:
+        raise HTTPException(
+            status_code=500, detail=f"Event {session_in.event_id} not updated"
+        )
 
-    start = new_event['start'].get('dateTime')
+    start = new_event["start"].get("dateTime")
     start = start[:-9]
     start = datetime.datetime.strptime(start, "%Y-%m-%dT%H:%M")
 
-    session, created = await Session.get_or_create(tutor=tutor, event_id=new_event['id'], start_time=start)
+    session, created = await Session.get_or_create(
+        tutor=tutor, event_id=new_event["id"], start_time=start
+    )
     # await session.save()
 
     await StudentSessions.create(session=session, category=category, user=current_user)

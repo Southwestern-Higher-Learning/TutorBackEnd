@@ -1,8 +1,8 @@
+import datetime
 import logging
 from typing import List
-import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
@@ -62,11 +62,15 @@ async def patch_current_user(
 async def get_user_id(user_id: int, current_user: User = Depends(find_current_user)):
     return await User_Pydnatic.from_queryset_single(User.get(id=user_id))
 
+
 # GET /user/{user_id}
 @router.get("/{user_id}/schedule")
-async def get_user_id(user_id: int, current_user: User = Depends(find_current_user),
-                      time_min: datetime.datetime = Query(...),
-                      time_max: datetime.datetime = Query(...)):
+async def get_user_schedule(
+    user_id: int,
+    current_user: User = Depends(find_current_user),
+    time_min: datetime.datetime = Query(...),
+    time_max: datetime.datetime = Query(...),
+):
     user = await User.get(id=user_id)
     if not user.is_tutor:
         raise HTTPException(405, "User is not a tutor")
