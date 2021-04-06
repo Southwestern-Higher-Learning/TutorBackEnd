@@ -27,3 +27,7 @@ class CategoryFilters(BaseModel):
 
 class ReviewFilters(object):
     reviewee_id: Optional[int]
+
+
+class ReportFilters(object):
+    report_id: Optional[int]

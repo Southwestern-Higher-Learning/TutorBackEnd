@@ -1,6 +1,7 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import JSONResponse
 
 from app.api.user import find_current_superuser, find_current_user
 from app.models.pydnatic import CategoryFilters
@@ -56,3 +57,16 @@ async def put_user_id(
 ):
     await Category.filter(id=category_id).update(**category.dict(exclude_unset=True))
     return await Category_Pydnatic.from_queryset_single(Category.get(id=category_id))
+
+
+# DELETE /
+# must be superuser
+# delete a report
+@router.delete("/", response_model=Category_Pydnatic)
+async def delete_category(
+    category_id: int, current_superuser: User = Depends(find_current_superuser)
+):
+    deleted_category = await Category.filter(id=category_id).delete()
+    if not deleted_category:
+        raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+    return JSONResponse(content={"message": f"Category deleted {category_id}"})
