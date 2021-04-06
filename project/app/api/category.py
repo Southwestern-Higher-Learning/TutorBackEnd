@@ -50,7 +50,7 @@ async def create_category(category: CategoryIn_Pydnatic):
 # Must be superuser
 # Update individual category
 @router.put("/{category_id}", response_model=Category_Pydnatic)
-async def put_user_id(
+async def put_category_id(
     category: CategoryIn_Pydnatic,
     category_id: int,
     current_superuser: User = Depends(find_current_superuser),

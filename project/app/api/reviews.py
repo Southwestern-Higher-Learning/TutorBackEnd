@@ -8,7 +8,7 @@ from app.models.pydnatic import ReviewFilters
 from app.models.tortoise import Review, Review_Pydnatic, ReviewIn_Pydnatic, User
 from app.models.utils import PaginateModel
 
-router = APIRouter(prefix="/category", tags=["category"])
+router = APIRouter(prefix="/reviews", tags=["reviews"])
 
 pageinate_review = PaginateModel(Review, ReviewFilters)
 
