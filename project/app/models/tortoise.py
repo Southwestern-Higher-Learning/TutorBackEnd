@@ -241,6 +241,13 @@ class Session(models.Model):
         computed = ("tutor_id", "student_ids")
 
 
+class PushToken(models.Model):
+    id = fields.BigIntField(pk=True)
+    user = fields.OneToOneField("models.User")
+    token = fields.CharField(max_length=255)
+    active = fields.BooleanField(default=True)
+
+
 Tortoise.init_models(["app.models.tortoise"], "models")
 
 User_Pydnatic = pydantic_model_creator(User, name="User")
