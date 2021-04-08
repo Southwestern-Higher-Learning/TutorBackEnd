@@ -1,7 +1,8 @@
+import datetime
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
@@ -62,6 +63,21 @@ async def get_user_id(user_id: int, current_user: User = Depends(find_current_us
     return await User_Pydnatic.from_queryset_single(User.get(id=user_id))
 
 
+# GET /user/{user_id}
+@router.get("/{user_id}/schedule")
+async def get_user_schedule(
+    user_id: int,
+    current_user: User = Depends(find_current_user),
+    time_min: datetime.datetime = Query(...),
+    time_max: datetime.datetime = Query(...),
+):
+    user = await User.get(id=user_id)
+    if not user.is_tutor:
+        raise HTTPException(405, "User is not a tutor")
+
+    return await user.get_events(time_min, time_max)
+
+
 @router.get("/", response_model=List[User_Pydnatic])
 async def get_all_users(
     response: Response,
@@ -82,8 +98,8 @@ async def put_user_id(
     update_dict = user_in.dict(exclude_unset=True)
     del update_dict["categories_ids"]
     await User.filter(id=user_id).update(**update_dict)
-    log.info(user_in)
-    user = await User.filter(id=user_id).first()
+    user = await User.filter(id=user_id).prefetch_related("creds").first()
+    await user.update_calendar()
     await user.categories.clear()
     categories = await Category.filter(id__in=user_in.categories_ids).all()
     await user.categories.add(*categories)

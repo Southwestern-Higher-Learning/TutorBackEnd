@@ -25,5 +25,13 @@ class CategoryFilters(BaseModel):
     name__icontains: Optional[str]
 
 
-class ReviewFilters(object):
+class ReviewFilters(BaseModel):
     reviewee_id: Optional[int]
+
+
+class ReportFilters(BaseModel):
+    pass
+
+
+class SessionFilters(BaseModel):
+    pass
