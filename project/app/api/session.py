@@ -17,6 +17,7 @@ from app.models.tortoise import (
     PushToken
 )
 from exponent_server_sdk import (
+    DeviceNotRegisteredError,
     PushClient,
     PushMessage
 )
@@ -132,4 +133,9 @@ async def send_push_message():
                                 body="message"))
             except Exception as e:
                 continue
+            try:
+                response.validate_response()
+            except DeviceNotRegisteredError:
+                push_token.active = False
+                await push_token.save()
             # return await Session_Pydnatic.from_queryset(response)
