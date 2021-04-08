@@ -14,7 +14,13 @@ from app.models.tortoise import (
     SessionIn_Pydnatic,
     StudentSessions,
     User,
+    PushToken
 )
+from exponent_server_sdk import (
+    PushClient,
+    PushMessage
+)
+
 from app.models.utils import PaginateModel
 
 router = APIRouter(prefix="/session", tags=["sessions"])
@@ -107,3 +113,23 @@ async def create_session(
     await StudentSessions.create(session=session, category=category, user=current_user)
 
     return await Session_Pydnatic.from_queryset_single(Session.get(id=session.id))
+
+
+@router.get("/notify", response_model=Session_Pydnatic)
+async def send_push_message():
+    # get sessions of previous day
+    # loop through sessions, and then students
+    previous_day = datetime.datetime.now() - datetime.timedelta(days=1)
+    sessions = await Session.filter(start_time__gte=previous_day).all()
+    for session in sessions:
+        for student in session.students:
+            push_token = PushToken.get_or_none(user=student, active=True)
+            if push_token is None: continue
+            # push token/use expo sdk here
+            try:
+                response = PushClient().publish(
+                    PushMessage(to=push_token.token,
+                                body="message"))
+            except Exception as e:
+                continue
+            # return await Session_Pydnatic.from_queryset(response)
