@@ -204,6 +204,11 @@ class Report(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
+    def user_id(self):
+        return self.user.id
+
+    class PydanticMeta:
+        computed =('user_id',)
 
 class StudentSessions(models.Model):
     session = fields.ForeignKeyField("models.Session", related_name="studentsessions")
@@ -227,7 +232,7 @@ class Session(models.Model):
     start_time = fields.DatetimeField(null=True)
     event_id = fields.CharField(max_length=255)
 
-    def tutor_id(self):
+    def tutor_id(self) -> int:
         return self.tutor.id
 
     def student_ids(self) -> List[int]:

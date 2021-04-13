@@ -25,14 +25,19 @@ log = logging.getLogger("uvicorn")
 
 
 @router.get("/", response_model=List[Session_Pydnatic])
-async def get_categories(
+async def get_sessions(
     response: Response,
     current_user: User = Depends(find_current_superuser),
     sessions=Depends(paginate_sessions),
 ):
     len_sessions = await sessions.count()
     response.headers["X-Total-Count"] = f"{len_sessions}"
-    return await Session_Pydnatic.from_queryset(sessions)
+    return await Session_Pydnatic.from_queryset(sessions.prefetch_related("students"))
+
+
+@router.get("/{session_id}", response_model=Session_Pydnatic)
+async def get_session(session_id: int, current_user: User = Depends(find_current_superuser)):
+    return await Session_Pydnatic.from_queryset_single(Session.get(id=session_id).prefetch_related("students"))
 
 
 @router.post("/", response_model=Session_Pydnatic)
@@ -64,9 +69,7 @@ async def create_session(
         raise HTTPException(status_code=404, detail="Calendar w/ id not found")
 
     event["summary"] = "[SU Guidance] Session"
-    attendees = event.get(
-        "attendees", [{"email": tutor.email, "responseStatus": "accepted"}]
-    )
+    attendees = event.get("attendees", [])
     attendees.append({"email": current_user.email})
     event["attendees"] = attendees
 
