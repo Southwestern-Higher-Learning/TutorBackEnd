@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import JSONResponse
 from googleapiclient.errors import HttpError
 
 from app.api.user import find_current_superuser, find_current_user
@@ -107,3 +108,20 @@ async def create_session(
     await StudentSessions.create(session=session, category=category, user=current_user)
 
     return await Session_Pydnatic.from_queryset_single(Session.get(id=session.id))
+
+
+@router.get("/stats/sessions", response_model=Session_Pydnatic)
+async def weekly_session_stats(
+    current_superuser: User = Depends(find_current_superuser),
+):
+    previous_week_start = datetime.datetime.now() - datetime.timedelta(days=7)
+    previous_week_end = datetime.datetime.now()
+    sessions = await Session.filter(start_time__gte=previous_week_start, start_time__lte=previous_week_end).all()
+    data = {}
+    for session in sessions:
+        day = datetime.datetime.strftime(session.start_time, "%Y-%m-%d")
+        if day in data:
+            data[day] += 1
+        else:
+            data[day] = 1
+    return JSONResponse(content=data)
