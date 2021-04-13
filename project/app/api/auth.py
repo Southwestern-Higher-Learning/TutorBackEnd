@@ -1,5 +1,3 @@
-import datetime
-import json
 import logging
 
 import google_auth_oauthlib.flow
@@ -22,7 +20,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
     "openid",
     "https://www.googleapis.com/auth/calendar",
-    "https://www.googleapis.com/auth/calendar.events"
+    "https://www.googleapis.com/auth/calendar.events",
 ]
 
 
@@ -120,13 +118,6 @@ async def get_or_create_user(
     flow: google_auth_oauthlib.flow.Flow, info, Authorize: AuthJWT
 ) -> UserCreate:
     google_creds = flow.credentials
-    temp = {
-        "token": google_creds.token,
-        "refresh_token": google_creds.refresh_token,
-        "token_uri": google_creds.token_uri,
-        "scopes": google_creds.scopes,
-        "expiry": google_creds.expiry.astimezone().isoformat() + "Z",
-    }
 
     user = await User.get_or_none(email=info["email"]).first()
 

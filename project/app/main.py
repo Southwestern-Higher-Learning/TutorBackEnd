@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
-from app.api import auth, category, ping, reports, user, reviews, session
+from app.api import auth, category, ping, reports, reviews, session, user
 from app.config import get_settings
 from app.db import init_db
 
