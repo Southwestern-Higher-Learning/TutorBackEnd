@@ -198,7 +198,7 @@ class Report(models.Model):
     id = fields.BigIntField(pk=True)
     type = fields.IntEnumField(ReportType)
     reference_id = fields.BigIntField()
-    user = fields.ForeignKeyField("models.User")
+    user = fields.ForeignKeyField("models.User", related_name="reports")
     reason = fields.CharField(max_length=200)
     description = fields.TextField(null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
