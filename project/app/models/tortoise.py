@@ -208,7 +208,8 @@ class Report(models.Model):
         return self.user.id
 
     class PydanticMeta:
-        computed =('user_id',)
+        computed = ("user_id",)
+
 
 class StudentSessions(models.Model):
     session = fields.ForeignKeyField("models.Session", related_name="studentsessions")
