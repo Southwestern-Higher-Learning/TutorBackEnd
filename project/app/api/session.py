@@ -116,7 +116,9 @@ async def weekly_session_stats(
 ):
     previous_week_start = datetime.datetime.now() - datetime.timedelta(days=7)
     previous_week_end = datetime.datetime.now()
-    sessions = await Session.filter(start_time__gte=previous_week_start, start_time__lte=previous_week_end).all()
+    sessions = await Session.filter(
+        start_time__gte=previous_week_start, start_time__lte=previous_week_end
+    ).all()
     data = {}
     for session in sessions:
         day = datetime.datetime.strftime(session.start_time, "%Y-%m-%d")
