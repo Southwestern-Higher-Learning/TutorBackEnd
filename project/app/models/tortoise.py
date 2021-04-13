@@ -204,7 +204,7 @@ class Report(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
-    def user_id(self):
+    def user_id(self) -> int:
         return self.user.id
 
     class PydanticMeta:
@@ -243,7 +243,7 @@ class Session(models.Model):
             return []
 
     class PydanticMeta:
-        exclude = ["tutor", "students", "studentsessions"]
+        exclude = ["tutor", "students"]
         computed = ("tutor_id", "student_ids")
 
 
