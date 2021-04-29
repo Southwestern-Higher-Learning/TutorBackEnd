@@ -83,23 +83,38 @@ class User(AbstractUser):
     async def get_events(
         self, time_min: datetime.datetime, time_max: datetime.datetime
     ):
+        """
+        Get the events between time_min and time_max of a tutor in a simplified dictionary format
+
+        time_min : The start date of the events to look for
+        time_max : The end date of the events to look for (inclusive)
+        """
+
+        # Don't move on if there is no calendar_id
         if self.google_calendar_id is None:
             raise HTTPException(404, "No Calendar found")
 
+        # Get the service to call the calendar API
         service = await self.get_calendar_service()
 
+        # See if the calendar exists
         calendar = service.calendars().get(calendarId=self.google_calendar_id).execute()
 
+        # If the calendar does not exist for some reason, don't move on
         if "summary" not in calendar:
             raise HTTPException(404, "No Calendar found")
 
+        # Format dates to something Google Calendar API understands
         time_min = time_min.astimezone().isoformat()
         time_max = time_max.astimezone().isoformat()
 
+        # Store the formatted events in a list
         event_list = []
+        # Used within loop to see if we can move
         page_token = None
 
         while True:
+            # Get the events of the tutor as a list
             events = (
                 service.events()
                 .list(
@@ -111,6 +126,7 @@ class User(AbstractUser):
                 )
                 .execute()
             )
+            # Loop through each event and get the info we need
             for event in events["items"]:
                 event_list.append(
                     {
@@ -120,9 +136,9 @@ class User(AbstractUser):
                         "summary": event["summary"],
                     }
                 )
-            # event_list.extend(events['items'])
-            # formatted_event =
+            # Get the page token
             page_token = events.get("nextPageToken")
+            # If there is no page token found, then we have reached the end of the events
             if not page_token:
                 break
 
